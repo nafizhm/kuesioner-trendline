@@ -20,8 +20,7 @@
         </div>
 
         <div class="panel form-card">
-            <h2>Tulis Saran Anda</h2>
-            <p class="muted">Form ini dibuat sesingkat mungkin agar mudah diisi langsung dari meja coffee.</p>
+            <h2>Kuesioner</h2>
 
             @if (session('status'))
                 <div class="status">{{ session('status') }}</div>

@@ -33,6 +33,10 @@
             color: var(--text);
         }
 
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
         .app-shell {
             min-height: 100vh;
             display: grid;
@@ -40,11 +44,31 @@
         }
 
         .sidebar {
+            position: relative;
             padding: 28px 20px;
             background:
                 radial-gradient(circle at top left, rgba(255, 255, 255, 0.05), transparent 28%),
                 linear-gradient(180deg, var(--sidebar), #23140b);
             color: #f9f4ee;
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .sidebar-close {
+            display: none;
+            width: 42px;
+            height: 42px;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #f9f4ee;
+            font-size: 1.35rem;
+            cursor: pointer;
         }
 
         .brand {
@@ -86,15 +110,7 @@
 
         .sidebar-footer {
             margin-top: 28px;
-            padding: 18px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.06);
-            color: rgba(249, 244, 238, 0.84);
-            line-height: 1.6;
-        }
-
-        .sidebar-note {
-            margin: 0;
+            padding: 0;
         }
 
         .logout-button {
@@ -122,6 +138,17 @@
             margin-bottom: 24px;
         }
 
+        .topbar-main {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .page-copy {
+            min-width: 0;
+        }
+
         .topbar h1 {
             margin: 0 0 8px;
             font-size: 2rem;
@@ -131,6 +158,24 @@
             margin: 0;
             color: var(--muted);
             line-height: 1.6;
+        }
+
+        .sidebar-toggle {
+            display: none;
+            width: 46px;
+            height: 46px;
+            border: 0;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #6f8258, #556643);
+            color: #fff;
+            box-shadow: 0 14px 28px rgba(47, 29, 18, 0.12);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle svg {
+            width: 20px;
+            height: 20px;
         }
 
         .user-badge {
@@ -232,18 +277,62 @@
             border: 1px solid rgba(79, 52, 34, 0.08);
         }
 
-        @media (max-width: 960px) {
+        .sidebar-backdrop {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
             .app-shell {
                 grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                inset: 0 auto 0 0;
+                width: min(320px, calc(100vw - 40px));
+                min-height: 100vh;
+                z-index: 40;
+                overflow-y: auto;
+                transform: translateX(-100%);
+                transition: transform 0.24s ease;
+                box-shadow: 24px 0 60px rgba(0, 0, 0, 0.18);
+            }
+
+            .app-shell.sidebar-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .sidebar-backdrop {
+                position: fixed;
+                inset: 0;
+                z-index: 30;
+                display: block;
+                background: rgba(26, 17, 10, 0.34);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.24s ease;
+            }
+
+            .app-shell.sidebar-open .sidebar-backdrop {
+                opacity: 1;
+                pointer-events: auto;
             }
 
             .sidebar {
                 padding: 20px;
             }
 
+            .sidebar-close,
+            .sidebar-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             .topbar {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 14px;
             }
 
             .user-badge {
@@ -258,17 +347,51 @@
                 padding: 20px;
             }
         }
+
+        @media (max-width: 640px) {
+            .content {
+                padding: 16px;
+            }
+
+            .card,
+            .panel {
+                padding: 18px;
+                border-radius: 20px;
+            }
+
+            .topbar h1 {
+                font-size: 1.6rem;
+            }
+
+            .topbar p {
+                font-size: 0.95rem;
+            }
+
+            .user-badge {
+                width: 100%;
+                text-align: center;
+            }
+
+            th,
+            td {
+                padding: 12px 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="app-shell">
+    <div class="app-shell" id="adminShell">
+        <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
         <aside class="sidebar">
-            <div class="brand">
-                <small>Admin Panel</small>
-                <strong>{{ config('app.name') }}</strong>
+            <div class="sidebar-header">
+                <div class="brand" style="margin-bottom: 0; flex: 1;">
+                    <small>Admin Panel</small>
+                    <strong>{{ config('app.name') }}</strong>
+                </div>
+                <button class="sidebar-close" type="button" id="sidebarClose" aria-label="Tutup sidebar">&times;</button>
             </div>
 
-            <nav>
+            <nav style="margin-top: 22px;">
                 <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
                 <a class="nav-link {{ request()->routeIs('questionnaires.*') ? 'active' : '' }}" href="{{ route('questionnaires.index') }}">Data Kuesioner</a>
                 <a class="nav-link {{ request()->routeIs('questions.*') ? 'active' : '' }}" href="{{ route('questions.index') }}">Pertanyaan Kuesioner</a>
@@ -276,11 +399,6 @@
             </nav>
 
             <div class="sidebar-footer">
-                <p class="sidebar-note">
-                    Login sebagai <strong>{{ auth()->user()->username }}</strong>.
-                    Area admin siap dipakai untuk kelola data inti kuesioner.
-                </p>
-
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="logout-button" type="submit">Logout</button>
@@ -290,9 +408,16 @@
 
         <main class="content">
             <div class="topbar">
-                <div>
-                    <h1>{{ $heading ?? 'Dashboard' }}</h1>
-                    <p>{{ $subheading ?? 'Kelola aplikasi kuesioner untuk meja coffee dari satu tempat.' }}</p>
+                <div class="topbar-main">
+                    <button class="sidebar-toggle" type="button" id="sidebarToggle" aria-label="Buka sidebar">
+                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                    <div class="page-copy">
+                        <h1>{{ $heading ?? 'Dashboard' }}</h1>
+                        <p>{{ $subheading ?? 'Kelola aplikasi kuesioner untuk meja coffee dari satu tempat.' }}</p>
+                    </div>
                 </div>
                 <div class="user-badge">{{ auth()->user()->name }}</div>
             </div>
@@ -300,6 +425,52 @@
             @yield('content')
         </main>
     </div>
+    <script>
+        (() => {
+            const shell = document.getElementById('adminShell');
+            const body = document.body;
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebarClose = document.getElementById('sidebarClose');
+            const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+            const mobileBreakpoint = window.matchMedia('(max-width: 1024px)');
+
+            const closeSidebar = () => {
+                shell?.classList.remove('sidebar-open');
+                body.classList.remove('sidebar-open');
+            };
+
+            const openSidebar = () => {
+                shell?.classList.add('sidebar-open');
+                body.classList.add('sidebar-open');
+            };
+
+            sidebarToggle?.addEventListener('click', () => {
+                if (shell?.classList.contains('sidebar-open')) {
+                    closeSidebar();
+                    return;
+                }
+
+                openSidebar();
+            });
+
+            sidebarClose?.addEventListener('click', closeSidebar);
+            sidebarBackdrop?.addEventListener('click', closeSidebar);
+
+            document.querySelectorAll('.sidebar .nav-link').forEach((link) => {
+                link.addEventListener('click', () => {
+                    if (mobileBreakpoint.matches) {
+                        closeSidebar();
+                    }
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                if (!mobileBreakpoint.matches) {
+                    closeSidebar();
+                }
+            });
+        })();
+    </script>
     @stack('scripts')
 </body>
 </html>

@@ -27,7 +27,7 @@ class ExampleTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Tulis Saran Anda')
+            ->assertSee('Kuesioner')
             ->assertSee('Apa menu favorit Anda?');
     }
 

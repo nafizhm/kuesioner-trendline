@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['suggestion'])]
+#[Fillable(['guest_name', 'table_number', 'suggestion'])]
 class Suggestion extends Model
 {
     public function answers(): HasMany

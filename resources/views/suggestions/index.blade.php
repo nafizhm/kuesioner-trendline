@@ -1,64 +1,97 @@
-@extends('layouts.guest')
+@extends('layouts.feedback', ['title' => 'Trendline Feedback'])
 
 @section('content')
-    <section class="hero">
-        <div class="panel hero-copy">
-            <div>
-                <div class="eyebrow">Form Saran</div>
-                <h1>Satu teguk kopi, satu ruang untuk masukan yang berarti.</h1>
-                <p class="lead">
-                    Trendline Coffee menyiapkan form singkat ini agar setiap pengunjung bisa berbagi saran,
-                    pengalaman, dan ide perbaikan setelah menikmati suasana kami.
-                </p>
-            </div>
+    @php
+        $totalSections = $questions->count() + 1;
+    @endphp
 
-            <div class="info-card">
-                <strong>Masukan Anda membantu kami tumbuh.</strong>
-                Setiap saran akan kami gunakan untuk mengevaluasi layanan, kenyamanan tempat, dan pengalaman
-                terbaik di Trendline Coffee.
-            </div>
+    <div class="header">
+        <div class="logo-card">
+            <img src="{{ asset('images/trendline-logo.png') }}" alt="Trendline Coffee">
         </div>
+        <div class="header-tagline">Bagaimana Kunjungan Anda Hari Ini?</div>
+        <div class="header-sub">Luangkan 2 menit dan ceritakan pengalaman Anda di Trendline Coffee.</div>
+    </div>
 
-        <div class="panel form-card">
-            <h2>Kuesioner</h2>
+    <div class="progress-wrap">
+        <div class="progress-info">
+            <span class="progress-label">Progress</span>
+            <span class="progress-count" id="progCount">0 dari {{ $totalSections }} dijawab</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progFill"></div>
+        </div>
+    </div>
 
-            @if (session('status'))
-                <div class="status">{{ session('status') }}</div>
+    <form method="POST" action="{{ route('suggestions.store') }}" novalidate>
+        @csrf
+
+        @foreach ($questions as $index => $question)
+            <section class="q-card" style="animation-delay: {{ number_format($index * 0.05, 2) }}s">
+                <div class="q-number">{{ str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT) }} - Pertanyaan</div>
+                <div class="q-text">{{ $question->question_text }}</div>
+                <textarea
+                    class="field-textarea js-progress-field @error('answers.'.$question->id) field-error @enderror"
+                    id="answers_{{ $question->id }}"
+                    name="answers[{{ $question->id }}]"
+                    placeholder="{{ $question->placeholder ?: 'Ceritakan pengalaman Anda dengan singkat dan jujur...' }}"
+                >{{ old('answers.'.$question->id) }}</textarea>
+                @error('answers.'.$question->id)
+                    <div class="error-text">{{ $message }}</div>
+                @enderror
+            </section>
+        @endforeach
+
+        <section class="q-card" style="animation-delay: {{ number_format($questions->count() * 0.05, 2) }}s">
+            <div class="q-number">{{ str_pad((string) ($questions->count() + 1), 2, '0', STR_PAD_LEFT) }} - Saran &amp; Masukan</div>
+            <div class="q-text">Ada saran atau masukan untuk membuat Trendline lebih baik?</div>
+            <textarea
+                class="field-textarea field-saran js-progress-field @error('suggestion') field-error @enderror"
+                id="suggestion"
+                name="suggestion"
+                placeholder="Tuliskan apa pun yang ingin Anda sampaikan. Setiap masukan sangat berarti bagi kami."
+                required
+            >{{ old('suggestion') }}</textarea>
+            @if ($errors->has('suggestion'))
+                <div class="error-text">{{ $errors->first('suggestion') }}</div>
+            @else
+                <div class="helper-text">Bagian ini wajib diisi agar tim kami bisa menindaklanjuti feedback Anda.</div>
             @endif
+        </section>
 
-            <form method="POST" action="{{ route('suggestions.store') }}">
-                @csrf
-
-                @foreach ($questions as $question)
-                    <div class="question-block">
-                        <label for="answers_{{ $question->id }}">{{ $question->question_text }}</label>
-                        <input
-                            id="answers_{{ $question->id }}"
-                            name="answers[{{ $question->id }}]"
-                            type="text"
-                            value="{{ old('answers.'.$question->id) }}"
-                            placeholder="{{ $question->placeholder ?: 'Tulis jawaban Anda' }}"
-                        >
-                        @error('answers.'.$question->id)
-                            <div class="error-text">{{ $message }}</div>
-                        @enderror
-                    </div>
-                @endforeach
-
-                <div class="field">
-                    <label for="suggestion">Saran</label>
-                    <textarea
-                        id="suggestion"
-                        name="suggestion"
-                        placeholder="Contoh: tempatnya nyaman, mungkin ke depan bisa ditambah colokan listrik atau pilihan pastry."
-                    >{{ old('suggestion') }}</textarea>
-                    @error('suggestion')
-                        <div class="error-text">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <button class="button" type="submit">Kirim Saran</button>
-            </form>
+        <div class="submit-wrap">
+            <button class="submit-btn" type="submit">Kirim Feedback ✦</button>
         </div>
-    </section>
+    </form>
+
+    <p class="footer-note">Terima kasih telah memilih Trendline. Kami selalu berusaha menyajikan yang terbaik.</p>
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const fields = Array.from(document.querySelectorAll('.js-progress-field'));
+            const countNode = document.getElementById('progCount');
+            const fillNode = document.getElementById('progFill');
+            const total = fields.length;
+
+            if (!countNode || !fillNode || total === 0) {
+                return;
+            }
+
+            const updateProgress = () => {
+                const filled = fields.filter((field) => field.value.trim().length > 0).length;
+                const percent = Math.round((filled / total) * 100);
+
+                fillNode.style.width = `${percent}%`;
+                countNode.textContent = `${filled} dari ${total} dijawab`;
+            };
+
+            fields.forEach((field) => {
+                field.addEventListener('input', updateProgress);
+            });
+
+            updateProgress();
+        })();
+    </script>
+@endpush

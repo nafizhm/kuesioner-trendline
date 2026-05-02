@@ -27,7 +27,7 @@ class ExampleTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Kuesioner')
+            ->assertSee('Bagaimana Kunjungan Anda Hari Ini?')
             ->assertSee('Apa menu favorit Anda?');
     }
 
@@ -37,7 +37,18 @@ class ExampleTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('Masuk ke Dashboard');
+            ->assertSee('Selamat datang kembali')
+            ->assertSee('Username');
+    }
+
+    public function test_the_thank_you_page_is_accessible(): void
+    {
+        $response = $this->get('/terima-kasih');
+
+        $response
+            ->assertOk()
+            ->assertSee('Terima Kasih!')
+            ->assertSee('Feedback Anda Sudah Terkirim');
     }
 
     public function test_admin_can_login_and_open_dashboard(): void
@@ -95,11 +106,15 @@ class ExampleTest extends TestCase
             'suggestion' => 'Tempatnya nyaman dan cocok untuk kerja santai.',
         ]);
 
-        $response->assertRedirect('/');
+        $response->assertRedirect('/terima-kasih');
 
         $suggestion = Suggestion::first();
 
         $this->assertNotNull($suggestion);
+        $this->assertDatabaseHas('suggestions', [
+            'id' => $suggestion->id,
+            'suggestion' => 'Tempatnya nyaman dan cocok untuk kerja santai.',
+        ]);
         $this->assertDatabaseHas('question_answers', [
             'suggestion_id' => $suggestion->id,
             'question_id' => $question->id,

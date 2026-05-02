@@ -21,6 +21,11 @@ class SuggestionController extends Controller
         ]);
     }
 
+    public function thankYou(): View
+    {
+        return view('suggestions.thanks');
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $questions = Question::query()
@@ -60,7 +65,6 @@ class SuggestionController extends Controller
         }
 
         return redirect()
-            ->route('suggestions.index')
-            ->with('status', 'Terima kasih, saran Anda sudah kami terima.');
+            ->route('suggestions.thank-you');
     }
 }

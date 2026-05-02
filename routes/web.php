@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SuggestionController::class, 'index'])->name('suggestions.index');
 Route::post('/', [SuggestionController::class, 'store'])->name('suggestions.store');
+Route::get('/terima-kasih', [SuggestionController::class, 'thankYou'])->name('suggestions.thank-you');
 
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [LoginController::class, 'create'])->name('login');

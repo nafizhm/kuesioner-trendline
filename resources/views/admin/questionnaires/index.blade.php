@@ -88,6 +88,24 @@
             line-height: 1.65;
         }
 
+        .summary-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+
+        .meta-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #f6efe4;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
         .datatable-meta {
             display: flex;
             justify-content: space-between;
@@ -298,16 +316,27 @@
                         @foreach ($suggestions as $suggestion)
                             @php
                                 $answerSummary = $suggestion->answers->map(fn ($answer) => $answer->question->question_text.' '.$answer->answer_text)->implode(' ');
+                                $guestSummary = collect([$suggestion->guest_name, $suggestion->table_number])->filter()->implode(' ');
                             @endphp
                             <tr
                                 data-row
-                                data-search="{{ strtolower($suggestion->suggestion.' '.$answerSummary) }}"
+                                data-search="{{ strtolower(trim($suggestion->suggestion.' '.$answerSummary.' '.$guestSummary)) }}"
                             >
                                 <td>#{{ $suggestion->id }}</td>
                                 <td>
                                     <div class="summary-text">
                                         {{ \Illuminate\Support\Str::limit($suggestion->suggestion, 110) }}
                                     </div>
+                                    @if ($suggestion->guest_name || $suggestion->table_number)
+                                        <div class="summary-meta">
+                                            @if ($suggestion->guest_name)
+                                                <span class="meta-chip">{{ $suggestion->guest_name }}</span>
+                                            @endif
+                                            @if ($suggestion->table_number)
+                                                <span class="meta-chip">{{ $suggestion->table_number }}</span>
+                                            @endif
+                                        </div>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge">{{ $suggestion->answers->count() }} jawaban</span>
@@ -322,6 +351,8 @@
                                             data-id="{{ $suggestion->id }}"
                                             data-created-at="{{ $suggestion->created_at->format('d M Y H:i') }}"
                                             data-suggestion="{{ e($suggestion->suggestion) }}"
+                                            data-guest-name="{{ e($suggestion->guest_name ?? '') }}"
+                                            data-table-number="{{ e($suggestion->table_number ?? '') }}"
                                             data-answers='@json($suggestion->answers->map(fn ($answer) => ["question" => $answer->question->question_text, "answer" => $answer->answer_text])->values())'
                                         >
                                             Detail
@@ -366,6 +397,11 @@
             </div>
 
             <div class="detail-grid">
+                <div class="detail-card">
+                    <h4>Info Pengunjung</h4>
+                    <p id="detailGuest">Tidak diisi.</p>
+                </div>
+
                 <div class="detail-card">
                     <h4>Saran Pengunjung</h4>
                     <p id="detailSuggestion">-</p>
@@ -445,6 +481,7 @@
             const modal = document.getElementById('questionnaireDetailModal');
             const detailTitle = document.getElementById('detailTitle');
             const detailMeta = document.getElementById('detailMeta');
+            const detailGuest = document.getElementById('detailGuest');
             const detailSuggestion = document.getElementById('detailSuggestion');
             const detailAnswers = document.getElementById('detailAnswers');
 
@@ -459,6 +496,7 @@
 
                     detailTitle.textContent = `Detail Kuesioner #${button.dataset.id}`;
                     detailMeta.textContent = `Dikirim pada ${button.dataset.createdAt}`;
+                    detailGuest.textContent = [button.dataset.guestName, button.dataset.tableNumber].filter(Boolean).join(' | ') || 'Tidak diisi.';
                     detailSuggestion.textContent = button.dataset.suggestion || '-';
                     detailAnswers.innerHTML = '';
 

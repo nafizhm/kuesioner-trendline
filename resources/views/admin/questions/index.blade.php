@@ -130,6 +130,7 @@
             padding: 20px;
             background: rgba(38, 28, 20, 0.45);
             z-index: 1000;
+            overflow-y: auto;
         }
 
         .modal.open {
@@ -138,11 +139,13 @@
 
         .modal-card {
             width: min(100%, 860px);
+            max-height: min(90vh, 920px);
             background: #fffdf9;
             border-radius: 28px;
             padding: 30px;
             border: 1px solid rgba(79, 52, 34, 0.08);
             box-shadow: 0 32px 70px rgba(38, 28, 20, 0.22);
+            overflow-y: auto;
         }
 
         .modal-head {
@@ -266,6 +269,7 @@
 
             .modal-card {
                 width: 100%;
+                max-height: calc(100vh - 16px);
                 padding: 22px;
                 border-radius: 22px;
             }
@@ -277,6 +281,22 @@
 
             .modal-grid textarea {
                 min-height: 140px;
+            }
+
+            .modal-actions {
+                position: sticky;
+                bottom: -22px;
+                z-index: 2;
+                margin: 24px -22px -22px;
+                padding: 16px 22px calc(16px + env(safe-area-inset-bottom, 0px));
+                background: rgba(255, 253, 249, 0.98);
+                backdrop-filter: blur(8px);
+                box-shadow: 0 -10px 24px rgba(38, 28, 20, 0.08);
+            }
+
+            .modal-actions .btn,
+            .modal-actions .btn-light {
+                width: 100%;
             }
         }
     </style>
